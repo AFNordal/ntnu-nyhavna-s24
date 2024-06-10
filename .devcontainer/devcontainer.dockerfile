@@ -2,6 +2,7 @@ FROM debian:12
 ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /root
+
 RUN apt clean && apt update && apt upgrade
 RUN apt install -y  build-essential cmake git
 
@@ -31,6 +32,8 @@ RUN git clone https://github.com/raspberrypi/pico-sdk.git --recurse-submodules
 # RUN npm install -g n && n stable
 
 # gitconfig
+COPY ssh-keys /root/.ssh
+
 RUN git config --global core.fileMode false
 RUN git config --global core.autocrlf true
 RUN git config --global --add safe.directory "*"
