@@ -1,1 +1,0 @@
-# ntnu-nyhavna-s24
