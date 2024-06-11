@@ -10,7 +10,7 @@ pico_sdk_init()
 
 add_executable(${PROJECT_NAME} 
     src/main.cpp
-    # src/hw_config.cpp
+    src/hw_config.cpp
 )
 # pico_generate_pio_header(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/pio/uart.pio)
 

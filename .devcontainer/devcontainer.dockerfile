@@ -20,7 +20,7 @@ RUN apt update && apt install -y ${python} python3-pip
 # RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/${python} 1
 # RUN update-alternatives --config python3
 
-# RUN printf "%s\n" "alias pip=pip3" "alias pip3='DISPLAY= pip3'" "alias python=python3" > ~/.bash_aliases
+RUN printf "%s\n" "alias pip=pip3" "alias pip3='DISPLAY= pip3'" "alias python=python3" > ~/.bash_aliases
 
 RUN pip3 install --upgrade pip setuptools --break-system-packages
 RUN pip3 install black --break-system-packages
