@@ -37,7 +37,7 @@ RUN pip3 install websockets --break-system-packages
 COPY ssh-keys /root/.ssh
 
 RUN git config --global core.fileMode false
-RUN git config --global core.autocrlf true
+# RUN git config --global core.autocrlf true
 RUN git config --global --add safe.directory "*"
 RUN git config --global user.email "nordalrasmus01@gmail.com"
 RUN git config --global user.name "Rasmus Anker Fossen Nordal"
