@@ -10,14 +10,14 @@
                 // "github.copilot",
                 // "janisdd.vscode-edit-csv",
                 // "kevinrose.vsc-python-indent",
+                "robbowen.synthwave-vscode",
                 "eamodio.gitlens",
                 "ms-python.python",
                 "ms-python.vscode-pylance",
                 // "ms-toolsai.jupyter",
                 "ms-python.black-formatter",
                 "ms-vscode.cpptools-extension-pack",
-                "ms-vscode.cmake-tools",
-                "robbowen.synthwave-vscode"
+                "ms-vscode.cmake-tools"
                 // "nvidia.nsight-vscode-edition",
                 // "svelte.svelte-vscode",
                 // "visualstudioexptteam.vscodeintellicode"
@@ -29,7 +29,10 @@
     },
     "runArgs": [
         // "--gpus=all",
-        // "--net=host",
+        "--net=host"
+        // "-it"
+        // "--privileged",
+        // "--pid=host"
         // "-eNVIDIA_DRIVER_CAPABILITIES=all"
         // "--add-host=host.docker.internal:host-gateway",
         // "--cap-add=SYS_PTRACE",

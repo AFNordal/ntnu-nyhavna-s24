@@ -12,17 +12,19 @@ RUN apt install -y gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-
 # c++ libraries
 WORKDIR /include
 RUN git clone https://github.com/raspberrypi/pico-sdk.git --recurse-submodules
+RUN git clone https://github.com/carlk3/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico.git --recurse-submodules
 
 # python
-# ARG python=python3.12
-# RUN apt update && apt install -y ${python} python3-pip
+ARG python=python3.11
+RUN apt update && apt install -y ${python} python3-pip 
 # RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/${python} 1
 # RUN update-alternatives --config python3
 
 # RUN printf "%s\n" "alias pip=pip3" "alias pip3='DISPLAY= pip3'" "alias python=python3" > ~/.bash_aliases
 
-# RUN pip install --upgrade pip setuptools
-# RUN pip install black mypy ipykernel jupyter
+RUN pip3 install --upgrade pip setuptools --break-system-packages
+RUN pip3 install black --break-system-packages
+RUN pip3 install websockets --break-system-packages
 # RUN pip install numpy scipy
 # RUN pip install plotly
 
@@ -45,3 +47,4 @@ WORKDIR /root
 
 RUN echo "export DISPLAY=host.docker.internal:0.0" >> .bashrc
 RUN echo "export LIBGL_ALWAYS_INDIRECT=1" >> .bashrc
+RUN echo "export PICO_SDK_PATH=/include/pico-sdk" >> .bashrc
