@@ -26,7 +26,7 @@ async def build_and_flash(build_dir: Path, project_dir: Path, build_type="Releas
     assert len(uf2s := list(build_dir.glob("*.uf2"))) == 1
     assert len(binary := uf2s[0].read_bytes()) > 0
     print(f"Sending script of size {len(binary)} bytes")
-    url = "ws://host.docker.internal:8888/flash"
+    url = "ws://host.docker.internal:8765/flash"
     async with Connect(url, ping_timeout=None) as sock:
         await sock.send(binary)
         try:
@@ -37,6 +37,6 @@ async def build_and_flash(build_dir: Path, project_dir: Path, build_type="Releas
 
 
 async def connect_over_ws(reader, writer):
-    url = "ws://host.docker.internal:8888/forward"
+    url = "ws://host.docker.internal:8765/forward"
     async with Connect(url, ping_timeout=None) as sock:
         await asyncio.gather(reader(sock), writer(sock))

@@ -1,10 +1,11 @@
 import serial
 import serial.tools.list_ports
-import time
 
 def get_url():
-    for _ in range(20):
-        ports = serial.tools.list_ports.comports()
-        assert len(ports) == 1    
-        return ports[0].device
-    
+    ports = serial.tools.list_ports.comports()
+    for i, p in enumerate(ports):
+        # print(p.description)
+        if "USB" in p.description:
+            print(f"Found port {p.name}:{p.description}")
+            return ports[i].device
+    raise Exception("No serial port found")

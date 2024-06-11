@@ -9,14 +9,14 @@ import win32api
 
 
 def load_script(script: bytes):
-    # path = Path("E:\\").joinpath("flash.uf2")
-    drive = Path("D:\\")
+    drive = Path("E:\\")
     for idx in range(20):
 
         print(f"Looking for pico dir {idx}")
 
         if drive.exists():
             info = win32api.GetVolumeInformation(str(drive))
+            # print(info)
             assert info[0] == "RPI-RP2"
             print("Trying to flash")
             with drive.joinpath("flash.uf2").open("wb") as f:
@@ -63,7 +63,7 @@ async def forward(websocket: WebSocketServerProtocol):
 
 
 async def handle(websocket: WebSocketServerProtocol):
-
+    print("HANDLE")
     if websocket.path == "/flash":
         data = await websocket.recv()
         load_script(data)
@@ -79,7 +79,7 @@ async def handle(websocket: WebSocketServerProtocol):
 
 async def main():
 
-    async with Serve(handle, "localhost", 8765, ping_timeout=None):
+    async with Serve(handle, "0.0.0.0", 8765, ping_timeout=None):
         await asyncio.Future()
 
 
