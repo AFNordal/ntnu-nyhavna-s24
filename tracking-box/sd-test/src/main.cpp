@@ -3,9 +3,12 @@
 #include "ff.h"
 #include "f_util.h"
 #include "pico/stdlib.h"
+#include "pico/multicore.h"
 #include "hw_config.h"
 #include "sd_card.h"
 #include "bmi270.h"
+
+#define SYS_CLK 133000
 
 #undef assert
 #define assert(x)                                                     \
@@ -19,101 +22,52 @@
 
 void blink(void);
 void process_bmi_fifo(void);
+void core1_entry(void);
 
 int main()
 {
     stdio_init_all();
-    assert(set_sys_clock_khz(133000, true));
+    assert(set_sys_clock_khz(SYS_CLK_KHZ, true));
     sleep_ms(500);
+
+    multicore_launch_core1(blink);
+
     bmi_init();
     printf("BMI270 initialized\n");
 
-    uint8_t FIFOdata[BMI_FIFO_CAP];
-    for (uint16_t i = 0; i < 500; i++)
+    for (uint16_t i = 0; i < 100; i++)
     {
         while (!bmi_drdy())
         {
         }
-        bmi_read_FIFO(FIFOdata);
+        bmi_read_FIFO(nullptr, bmi_get_FIFO_length());
     }
 
     while (true)
     {
         if (bmi_drdy())
         {
-            process_bmi_fifo();
+            int16_t ax, ay, az, gx, gy, gz;
+            bmi_data_t bmidata;
+            if (bmi_read_sensors(&bmidata) == 0)
+            {
+                // printf("gx:%d,", gx);
+                // printf("gy:%d,", gy);
+                // printf("gz:%d,", gz);
+                // printf("ax:%d,", ax);
+                // printf("ay:%d,", ay);
+                // printf("az:%d\n", az);
+            }
         }
     }
+}
+
+void core1_entry(void) {
     blink();
     for (;;)
         ;
 }
 
-uint32_t prev = 0;
-
-void process_bmi_fifo(void)
-{
-    uint32_t t = time_us_32();
-    if (t-prev > 1000000) {
-        prev = t;
-        printf("%d\n", bmi_get_FIFO_length());
-    }
-    uint8_t FIFOdata[BMI_FIFO_CAP];
-    uint16_t idx = 0;
-    bool at_end = false;
-    uint16_t len = bmi_read_FIFO(FIFOdata);
-
-    while (!at_end)
-    {
-        bmi_frame_type_t frame_type = bmi_parse_header(FIFOdata[idx]);
-        // printf("%d: %s\n", frame_type, bmi_frame_type_to_string(frame_type).c_str());
-        int16_t gyr_x, gyr_y, gyr_z, acc_x, acc_y, acc_z;
-        switch (frame_type)
-        {
-        case BMI_INVALID:
-            at_end = true;
-            break;
-        case BMI_ACC_GYR:
-            bmi_parse_sensor(FIFOdata + idx + 1, &gyr_x, &gyr_y, &gyr_z);
-            bmi_parse_sensor(FIFOdata + idx + 7, &acc_x, &acc_y, &acc_z);
-            idx += 13;
-            // printf("gx:%d,", gyr_x);
-            // printf("gy:%d,", gyr_y);
-            // printf("gz:%d,", gyr_z);
-            // printf("ax:%d,", acc_x);
-            // printf("ay:%d,", acc_y);
-            // printf("az:%d\n", acc_z);
-            // printf("GOOD\n");
-            break;
-        case BMI_GYR:
-            // printf("GYR\n");
-            idx += 7;
-            break;
-        case BMI_ACC:
-            printf("ACC\n");
-            idx += 7;
-            break;
-        case BMI_TIME:
-            // printf("TIME\n"); 
-            idx += 4;
-            break;
-        case BMI_CONFIG:
-            printf("CONFIG\n");
-            idx += 5;
-            break;
-        case BMI_SKIP:
-            printf("SKIP\n");
-            idx += 2;
-            break;
-        default:
-            printf("XXXXXXXXX  %s  XXXXXXXXXX\n", bmi_frame_type_to_string(frame_type).c_str());
-            // at_end = true;
-            idx++;
-        }
-        if (idx >= len)
-            at_end = true;
-    }
-}
 
 void blink(void)
 {
@@ -123,8 +77,8 @@ void blink(void)
     while (true)
     {
         gpio_put(LED_PIN, 1);
-        sleep_ms(250);
+        busy_wait_at_least_cycles(1000*SYS_CLK);
         gpio_put(LED_PIN, 0);
-        sleep_ms(250);
+        busy_wait_at_least_cycles(1000*SYS_CLK);
     }
 }

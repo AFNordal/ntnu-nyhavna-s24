@@ -61,6 +61,16 @@ typedef enum
     BMI_INVALID
 } bmi_frame_type_t;
 
+typedef struct
+{
+    int16_t ax;
+    int16_t ay;
+    int16_t az;
+    int16_t gx;
+    int16_t gy;
+    int16_t gz;
+} bmi_data_t;
+
 uint16_t bmi_get_FIFO_length(void);
 void bmi_print_status(void);
 void sandbox(void);
@@ -73,7 +83,5 @@ void bmi_check_error(void);
 void bmi_flush_FIFO(void);
 void bmi_softreset(void);
 bool bmi_drdy(void);
-uint16_t bmi_read_FIFO(uint8_t *rxdata);
-bmi_frame_type_t bmi_parse_header(uint8_t h);
-void bmi_parse_sensor(uint8_t *FIFOdata, int16_t *x, int16_t *y, int16_t *z);
-std::string bmi_frame_type_to_string(bmi_frame_type_t f);
+void bmi_read_FIFO(uint8_t *rxdata, uint16_t len);
+uint8_t bmi_read_sensors(bmi_data_t *data);

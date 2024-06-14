@@ -41,8 +41,8 @@ void bmi_init(void)
 
     // Gyro downsample by 4 to get 1.6KHz, unifltered data, no acc downsample
     bmi_write(BMI_FIFO_DOWNS_R, (0x02 << 0) | (0x00 << 3) | (0x00 << 4) | (0x00 << 7));
-    // FIFO watermark 2 bytes
-    bmi_write(BMI_FIFO_WTM_0_R, 0x02);
+    // FIFO watermark 6 bytes
+    bmi_write(BMI_FIFO_WTM_0_R, 0x06);
     bmi_write(BMI_FIFO_WTM_1_R, 0x00);
 
     // Map watermark to INT1
@@ -50,23 +50,16 @@ void bmi_init(void)
     // Enable INT1 output, active high
     bmi_write(BMI_INT1_IO_CTRL_R, (0x01 << 1) | (0x01 << 3));
 
-    // Enable sensortime frames
-    bmi_write(BMI_FIFO_CONFIG_0_R, (0x01 << 1));
-    // Enable FIFO header (for sensortime), enable acc and gyr data to FIFO
-    bmi_write(BMI_FIFO_CONFIG_1_R, (0x01 << 4) | (0x01 << 6) | (0x01 << 7));
+    // Disable sensortime frames
+    bmi_write(BMI_FIFO_CONFIG_0_R, (0x00 << 1));
+    // Headerless FIFO, enable acc and gyr data to FIFO
+    bmi_write(BMI_FIFO_CONFIG_1_R, (0x00 << 4) | (0x01 << 6) | (0x01 << 7));
 
     bmi_check_error();
 
     // Enable gyro and acc
     bmi_write(BMI_PWR_CTRL_R, (0x01 << 1) | (0x01 << 2));
     // bmi_flush_FIFO();
-}
-
-uint16_t bmi_get_FIFO_length(void)
-{
-    uint16_t len;
-    bmi_read_arr(BMI_FIFO_LENGTH_0_R, 2, (uint8_t *)&len);
-    return len;
 }
 
 void bmi_print_status(void)
@@ -152,8 +145,9 @@ void bmi_softreset(void)
     bmi_write(BMI_CMD_R, 0xb6);
 }
 
-void sandbox(void)
+void bmi_read_FIFO(uint8_t *rxdata, uint16_t len)
 {
+    bmi_read_arr(BMI_FIFO_DATA_R, len, rxdata);
 }
 
 // Checks if watermark interrupt is triggered
@@ -163,83 +157,29 @@ bool bmi_drdy(void)
     return bool(intstatus);
 }
 
-uint16_t bmi_read_FIFO(uint8_t *rxdata)
+uint16_t bmi_get_FIFO_length(void)
 {
-    uint16_t len = 64; // bmi_get_FIFO_length();
-    bmi_read_arr(BMI_FIFO_DATA_R, len, rxdata);
+    uint16_t len;
+    bmi_read_arr(BMI_FIFO_LENGTH_0_R, 2, (uint8_t *)&len);
     return len;
 }
 
-std::string bmi_frame_type_to_string(bmi_frame_type_t f)
+uint8_t bmi_read_sensors(bmi_data_t *data)
 {
-    switch (f)
+    uint16_t len = bmi_get_FIFO_length();
+    if (len == 0)
     {
-    case BMI_ACC:
-        return "acc data";
-    case BMI_GYR:
-        return "gyro data";
-    case BMI_ACC_GYR:
-        return "acc and gyro data";
-    case BMI_UNDEF_REGULAR:
-        return "undefined regular";
-    case BMI_SKIP:
-        return "skip";
-    case BMI_TIME:
-        return "time";
-    case BMI_CONFIG:
-        return "config";
-    case BMI_UNDEF_CTRL:
-        return "undefined control";
-    case BMI_UNDEF_TYPE:
-        return "undefined frame type";
-    case BMI_INVALID:
-        return "invalid";
-    default:
-        return "NOT A TYPE";
+        return 1;
     }
-}
-
-bmi_frame_type_t bmi_parse_header(uint8_t h)
-{
-    if (h == 0x80)
-    {
-        return BMI_INVALID;
-    }
-    uint8_t mode = ((h >> 6) & 0x03);
-    uint8_t parm = ((h >> 2) & 0x0F);
-    switch (mode)
-    {
-    case 1:
-        switch (parm)
-        {
-        case 0:
-            return BMI_SKIP;
-        case 1:
-            return BMI_TIME;
-        case 2:
-            return BMI_CONFIG;
-        default:
-            return BMI_UNDEF_CTRL;
-        }
-        break;
-    case 2:
-        // printf("%X\n", parm);
-        if ((parm & 0x07) == 0x03)
-            return BMI_ACC_GYR;
-        else if (parm & 0x01)
-            return BMI_ACC;
-        else if (parm & 0x02)
-            return BMI_GYR;
-        else
-            return BMI_UNDEF_REGULAR;
-    default:
-        return BMI_UNDEF_TYPE;
-    }
-}
-
-void bmi_parse_sensor(uint8_t *FIFOdata, int16_t *x, int16_t *y, int16_t *z)
-{
-    *x = (int16_t)((FIFOdata[1] << 8) | FIFOdata[0]);
-    *y = (int16_t)((FIFOdata[3] << 8) | FIFOdata[2]);
-    *z = (int16_t)((FIFOdata[5] << 8) | FIFOdata[4]);
+    // printf("%d\n", len);
+    // assert(len <= 36);
+    uint8_t rxdata[len];
+    bmi_read_FIFO(rxdata, len);
+    data->gx = (int16_t)((rxdata[1] << 8) | rxdata[0]);
+    data->gy = (int16_t)((rxdata[3] << 8) | rxdata[2]);
+    data->gz = (int16_t)((rxdata[5] << 8) | rxdata[4]);
+    data->ax = (int16_t)((rxdata[7] << 8) | rxdata[6]);
+    data->ay = (int16_t)((rxdata[9] << 8) | rxdata[8]);
+    data->az = (int16_t)((rxdata[11] << 8) | rxdata[10]);
+    return 0;
 }

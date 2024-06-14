@@ -30,6 +30,7 @@ pico_add_extra_outputs(${PROJECT_NAME})
 add_compile_definitions(PICO_STDIO_USB_RESET_MAGIC_BAUD_RATE=1200)
 target_link_libraries(${PROJECT_NAME} 
     pico_stdlib
+    pico_multicore
     no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
     # hardware_spi
     hardware_i2c
