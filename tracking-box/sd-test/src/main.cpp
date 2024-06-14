@@ -4,11 +4,12 @@
 #include "f_util.h"
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
+#include "pico/util/queue.h"
+#include "clock_config.h"
 #include "hw_config.h"
 #include "sd_card.h"
 #include "bmi270.h"
 
-#define SYS_CLK 133000
 
 #undef assert
 #define assert(x)                                                     \
@@ -20,6 +21,9 @@
         }                                                             \
     }
 
+
+queue_t imu_queue;
+
 void blink(void);
 void process_bmi_fifo(void);
 void core1_entry(void);
@@ -27,13 +31,15 @@ void core1_entry(void);
 int main()
 {
     stdio_init_all();
-    assert(set_sys_clock_khz(SYS_CLK_KHZ, true));
-    sleep_ms(500);
+    set_sys_clock_133mhz();
+    busy_wait_cycles_ms(500);
 
-    multicore_launch_core1(blink);
 
     bmi_init();
     printf("BMI270 initialized\n");
+
+    queue_init(&imu_queue, sizeof(bmi_data_t), 64);
+    multicore_launch_core1(core1_entry);
 
     for (uint16_t i = 0; i < 100; i++)
     {
@@ -51,18 +57,22 @@ int main()
             bmi_data_t bmidata;
             if (bmi_read_sensors(&bmidata) == 0)
             {
-                // printf("gx:%d,", gx);
-                // printf("gy:%d,", gy);
-                // printf("gz:%d,", gz);
-                // printf("ax:%d,", ax);
-                // printf("ay:%d,", ay);
-                // printf("az:%d\n", az);
+                printf("Added\n");
+                queue_add_blocking(&imu_queue, &bmidata);
             }
         }
     }
 }
 
 void core1_entry(void) {
+    while (true)
+    {
+        // printf("removing\n");
+        bmi_data_t bmidata;
+        queue_remove_blocking(&imu_queue, &bmidata);
+        print_bmi_data(&bmidata);
+    }
+    
     blink();
     for (;;)
         ;
@@ -77,8 +87,8 @@ void blink(void)
     while (true)
     {
         gpio_put(LED_PIN, 1);
-        busy_wait_at_least_cycles(1000*SYS_CLK);
+        busy_wait_cycles_ms(500);
         gpio_put(LED_PIN, 0);
-        busy_wait_at_least_cycles(1000*SYS_CLK);
+        busy_wait_cycles_ms(500);
     }
 }

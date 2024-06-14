@@ -6,6 +6,7 @@
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"
 #include "bmi270_config.h"
+#include "clock_config.h"
 
 #define BMI_FIFO_CAP 2048
 
@@ -85,3 +86,4 @@ void bmi_softreset(void);
 bool bmi_drdy(void);
 void bmi_read_FIFO(uint8_t *rxdata, uint16_t len);
 uint8_t bmi_read_sensors(bmi_data_t *data);
+void print_bmi_data(bmi_data_t *data);

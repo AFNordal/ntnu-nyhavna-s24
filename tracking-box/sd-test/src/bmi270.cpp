@@ -9,9 +9,9 @@ void bmi_init(void)
     gpio_pull_up(BMI_SCL_PIN);
 
     // Reset all registers
-    sleep_ms(10);
+    busy_wait_cycles_ms(10);
     bmi_softreset();
-    sleep_ms(10);
+    busy_wait_cycles_ms(10);
 
     bmi_write(BMI_PWR_CONF_R, (0x00 << 0) | (0x01 << 1));
 
@@ -19,7 +19,7 @@ void bmi_init(void)
     bmi_write(BMI_INIT_CTRL_R, 0x00);
     bmi_write_arr(BMI_INIT_DATA_R, sizeof(bmi270_config_file), bmi270_config_file);
     bmi_write(BMI_INIT_CTRL_R, 0x01);
-    sleep_ms(20);
+    busy_wait_cycles_ms(20);
 
     uint8_t init_status = bmi_read(BMI_INTERNAL_STATUS_R);
     if ((init_status & 0x0F) != 0x1)
@@ -93,7 +93,7 @@ void bmi_write_arr(uint8_t addr, size_t len, const uint8_t *txdata)
     {
         printf("BMI I2C WRITE ERROR; wrote %d bytes.\n", bytes_written);
     }
-    sleep_us(450);
+    busy_wait_cycles_us(450);
 }
 
 void bmi_write(uint8_t addr, uint8_t txdata)
@@ -104,7 +104,7 @@ void bmi_write(uint8_t addr, uint8_t txdata)
     {
         printf("BMI I2C WRITE ERROR; wrote %d bytes.\n", bytes_written);
     }
-    sleep_us(450);
+    busy_wait_cycles_us(450);
 }
 
 uint8_t bmi_read(uint8_t addr)
@@ -182,4 +182,14 @@ uint8_t bmi_read_sensors(bmi_data_t *data)
     data->ay = (int16_t)((rxdata[9] << 8) | rxdata[8]);
     data->az = (int16_t)((rxdata[11] << 8) | rxdata[10]);
     return 0;
+}
+
+
+void print_bmi_data(bmi_data_t *data) {
+    printf("gx:%d,", data->gx);
+    printf("gy:%d,", data->gy);
+    printf("gz:%d,", data->gz);
+    printf("ax:%d,", data->ax);
+    printf("ay:%d,", data->ay);
+    printf("az:%d\n", data->az);
 }
