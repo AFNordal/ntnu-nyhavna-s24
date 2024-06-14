@@ -6,6 +6,6 @@ def get_url():
     for i, p in enumerate(ports):
         # print(p.description)
         if "USB" in p.description:
-            print(f"Found port {p.name}:{p.description}")
+            print(f"Found port {p.description}")
             return ports[i].device
     raise Exception("No serial port found")
