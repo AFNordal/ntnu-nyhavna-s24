@@ -1,65 +1,94 @@
 #include <stdio.h>
-//
-#include "f_util.h"
+
 #include "ff.h"
+#include "f_util.h"
 #include "pico/stdlib.h"
-#include "rtc.h"
-//
+#include "pico/multicore.h"
+#include "pico/util/queue.h"
+#include "clock_config.h"
 #include "hw_config.h"
+#include "sd_card.h"
+#include "bmi270.h"
 
-void wait_for_serial(void);
-void test_io(void);
+
+#undef assert
+#define assert(x)                                                     \
+    if (!(x))                                                         \
+    {                                                                 \
+        printf("Assertion failed, line %s:%d\n", __FILE__, __LINE__); \
+        while (1)                                                     \
+        {                                                             \
+        }                                                             \
+    }
+
+
+queue_t imu_queue;
+
 void blink(void);
+void process_bmi_fifo(void);
+void core1_entry(void);
 
-int main() {
+int main()
+{
     stdio_init_all();
-    time_init();
-    // test_io();
-    // blink();
-    // wait_for_serial();
-    puts("hello");
-    FATFS fs;
-    FRESULT fr = f_mount(&fs, "", 1);
-    if (FR_OK != fr) panic("f_mount error: %s (%d)\n", FRESULT_str(fr), fr);
-    FIL fil;
-    const char* const filename = "filename.txt";
-    fr = f_open(&fil, filename, FA_OPEN_APPEND | FA_WRITE);
-    if (FR_OK != fr && FR_EXIST != fr)
-        panic("f_open(%s) error: %s (%d)\n", filename, FRESULT_str(fr), fr);
-    if (f_printf(&fil, "Hello, world!\n") < 0) {
-        printf("f_printf failed\n");
+    set_sys_clock_133mhz();
+    busy_wait_cycles_ms(500);
+
+
+    bmi_init();
+    printf("BMI270 initialized\n");
+
+    queue_init(&imu_queue, sizeof(bmi_data_t), 64);
+    multicore_launch_core1(core1_entry);
+
+    for (uint16_t i = 0; i < 100; i++)
+    {
+        while (!bmi_drdy())
+        {
+        }
+        bmi_read_FIFO(nullptr, bmi_get_FIFO_length());
     }
-    fr = f_close(&fil);
-    if (FR_OK != fr) {
-        printf("f_close error: %s (%d)\n", FRESULT_str(fr), fr);
-    }
-    f_unmount("");
 
-    puts("Goodbye, world!");
-    for (;;);
-}
-
-void wait_for_serial(void) {
-    char str[10];
-    gets(str);
-}
-
-void test_io(void) {
-    while (true) {
-        char str[50];
-        gets(str);
-        puts(str);
+    while (true)
+    {
+        if (bmi_drdy())
+        {
+            int16_t ax, ay, az, gx, gy, gz;
+            bmi_data_t bmidata;
+            if (bmi_read_sensors(&bmidata) == 0)
+            {
+                printf("Added\n");
+                queue_add_blocking(&imu_queue, &bmidata);
+            }
+        }
     }
 }
 
-void blink(void){
+void core1_entry(void) {
+    while (true)
+    {
+        // printf("removing\n");
+        bmi_data_t bmidata;
+        queue_remove_blocking(&imu_queue, &bmidata);
+        print_bmi_data(&bmidata);
+    }
+    
+    blink();
+    for (;;)
+        ;
+}
+
+
+void blink(void)
+{
     const uint LED_PIN = PICO_DEFAULT_LED_PIN;
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
-    while (true) {
+    while (true)
+    {
         gpio_put(LED_PIN, 1);
-        sleep_ms(250);
+        busy_wait_cycles_ms(500);
         gpio_put(LED_PIN, 0);
-        sleep_ms(250);
+        busy_wait_cycles_ms(500);
     }
 }

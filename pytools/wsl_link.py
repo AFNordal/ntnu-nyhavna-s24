@@ -7,7 +7,7 @@ import sys
 
 
 async def cmake(build_dir: Path, project_dir: Path, build_type="Release"):
-    cmd = f"cmake -DCMAKE_BUILD_TYPE=Release {project_dir}"
+    cmd = f"cmake -DCMAKE_BUILD_TYPE={build_type} {project_dir}"
     proc = await asyncio.create_subprocess_exec(*shlex.split(cmd), cwd=build_dir)
     await proc.wait()
     assert proc.returncode == 0
