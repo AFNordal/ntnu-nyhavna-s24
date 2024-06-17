@@ -15,6 +15,8 @@ add_executable(${PROJECT_NAME}
     src/hw_config.cpp
     src/bmi270.cpp
     src/main.cpp
+    src/battery.cpp
+    src/sd_utils.cpp
     )
 
 target_include_directories(${PROJECT_NAME}
@@ -32,11 +34,10 @@ target_link_libraries(${PROJECT_NAME}
     pico_stdlib
     pico_multicore
     no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
-    # hardware_spi
     hardware_i2c
-    # hardware_pio
-    # hardware_dma
-    # hardware_clocks
+    hardware_gpio
+    hardware_adc
+    hardware_irq
 )
 
 # Enable usb output, disable uart output

@@ -24,11 +24,7 @@ void bmi_init(void)
     uint8_t init_status = bmi_read(BMI_INTERNAL_STATUS_R);
     if ((init_status & 0x0F) != 0x1)
     {
-        printf("BMI270 INITIALIZATION FAILED\n");
-        printf("Error code: %x", init_status);
-        while (true)
-        {
-        }
+        ERROR("BMI270 initialization failed with error code 0x%x\n", init_status);
     }
     // Acc: 1.6KHz ODR, normal filtering
     bmi_write(BMI_ACC_CONF_R, (0x0c << 0) | (0x02 << 4) | (0x01 << 7));
@@ -36,8 +32,8 @@ void bmi_init(void)
     bmi_write(BMI_GYR_CONF_R, (0x0c << 0) | (0x02 << 4) | (0x01 << 6) | (0x01 << 7));
     // Acc: +/- 2g
     bmi_write(BMI_ACC_RANGE_R, 0x00);
-    // Gyro: +/-250 dps, 131.2 LSB/dps
-    bmi_write(BMI_GYR_RANGE_R, (0x03 << 0) | (0x00 << 3));
+    // Gyro: +/-2000 dps, 131.2 LSB/dps
+    bmi_write(BMI_GYR_RANGE_R, (0x03 << 0) | (0x01 << 3));
 
     // Gyro downsample by 4 to get 1.6KHz, unifltered data, no acc downsample
     bmi_write(BMI_FIFO_DOWNS_R, (0x02 << 0) | (0x00 << 3) | (0x00 << 4) | (0x00 << 7));
@@ -65,7 +61,7 @@ void bmi_init(void)
 void bmi_print_status(void)
 {
     uint8_t statusdata = bmi_read(BMI_STATUS_R);
-    printf("%x\n", statusdata);
+    INFO("%x\n", statusdata);
 }
 
 void bmi_read_arr(uint8_t addr, size_t len, uint8_t *rxdata)
@@ -74,7 +70,7 @@ void bmi_read_arr(uint8_t addr, size_t len, uint8_t *rxdata)
     size_t bytes_read = i2c_read_blocking(BMI_I2C, BMI_I2C_ADDR, rxdata, len, false);
     if (bytes_read != len)
     {
-        printf("BMI I2C READ ERROR\n");
+        WARNING("BMI read error: Read %d/%d bytes\n", bytes_read, len);
     }
 }
 
@@ -82,16 +78,11 @@ void bmi_write_arr(uint8_t addr, size_t len, const uint8_t *txdata)
 {
     uint8_t txarr[len + 1];
     txarr[0] = addr;
-    // memcpy(txarr + 1, txdata, len);
-    for (int i = 0; i < len; i++)
-    {
-        txarr[i + 1] = txdata[i];
-    }
-    // printf("%x\n", txarr[len]);
+    memcpy(txarr + 1, txdata, len);
     size_t bytes_written = i2c_write_blocking(BMI_I2C, BMI_I2C_ADDR, txarr, len + 1, false);
     if (bytes_written != len + 1)
     {
-        printf("BMI I2C WRITE ERROR; wrote %d bytes.\n", bytes_written);
+        WARNING("BMI write error: Read %d/%d bytes\n", bytes_written, len + 1);
     }
     busy_wait_cycles_us(450);
 }
@@ -102,7 +93,7 @@ void bmi_write(uint8_t addr, uint8_t txdata)
     size_t bytes_written = i2c_write_blocking(BMI_I2C, BMI_I2C_ADDR, txarr, 2, false);
     if (bytes_written != 2)
     {
-        printf("BMI I2C WRITE ERROR; wrote %d bytes.\n", bytes_written);
+        WARNING("BMI write error\n");
     }
     busy_wait_cycles_us(450);
 }
@@ -113,7 +104,7 @@ uint8_t bmi_read(uint8_t addr)
     i2c_write_blocking(BMI_I2C, BMI_I2C_ADDR, &addr, 1, false);
     if (i2c_read_blocking(BMI_I2C, BMI_I2C_ADDR, &rxdata, 1, false) != 1)
     {
-        printf("BMI I2C READ ERROR\n");
+        WARNING("BMI read error\n");
         return -1;
     }
     else
@@ -127,11 +118,11 @@ void bmi_check_error(void)
     uint8_t errordata = bmi_read(BMI_INTERNAL_ERROR_R);
     if ((errordata & (1 << 2)) != 0)
     {
-        printf("INTERNAL BMI ERROR: Fatal\n");
+        ERROR("Internal bmi error: Fatal\n");
     }
     else if ((errordata & (1 << 1)) != 0)
     {
-        printf("INTERNAL BMI ERROR: Long processing time\n");
+        WARNING("Internal bmi error: Long processing time\n");
     }
 }
 
@@ -171,8 +162,7 @@ uint8_t bmi_read_sensors(bmi_data_t *data)
     {
         return 1;
     }
-    // printf("%d\n", len);
-    // assert(len <= 36);
+    ASSERT(len <= 12);
     uint8_t rxdata[len];
     bmi_read_FIFO(rxdata, len);
     data->gx = (int16_t)((rxdata[1] << 8) | rxdata[0]);
@@ -184,8 +174,8 @@ uint8_t bmi_read_sensors(bmi_data_t *data)
     return 0;
 }
 
-
-void print_bmi_data(bmi_data_t *data) {
+void print_bmi_data(bmi_data_t *data)
+{
     printf("gx:%d,", data->gx);
     printf("gy:%d,", data->gy);
     printf("gz:%d,", data->gz);

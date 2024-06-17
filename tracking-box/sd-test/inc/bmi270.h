@@ -6,7 +6,7 @@
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"
 #include "bmi270_config.h"
-#include "clock_config.h"
+#include "sys_utils.h"
 
 #define BMI_FIFO_CAP 2048
 
