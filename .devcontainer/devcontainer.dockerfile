@@ -25,6 +25,7 @@ RUN printf "%s\n" "alias pip=pip3" "alias pip3='DISPLAY= pip3'" "alias python=py
 RUN pip3 install --upgrade pip setuptools --break-system-packages
 RUN pip3 install black --break-system-packages
 RUN pip3 install websockets --break-system-packages
+RUN pip3 install numpy matplotlib tqdm --break-system-packages
 # RUN pip install numpy scipy
 # RUN pip install plotly
 

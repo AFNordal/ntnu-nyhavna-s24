@@ -24,8 +24,9 @@ def load_script(script: bytes):
             print("Wrote script")
             return
         try:
-            serial.serial_for_url(url=get_url(), baudrate=1200)
+            serial.serial_for_url(url=get_url(), baudrate=1200, timeout=0.2)
         except Exception as e:
+            print("Failed to set magic baudrate")
             pass
         time.sleep(0.5)
 
@@ -35,6 +36,7 @@ def load_script(script: bytes):
 async def forward(websocket: WebSocketServerProtocol):
     loop = asyncio.get_running_loop()
     for _ in range(20):
+        print("Attempting to open COM port")
         try:
             ser = serial.serial_for_url(url=get_url(), baudrate=9000, timeout=0.1)
             break
@@ -63,7 +65,6 @@ async def forward(websocket: WebSocketServerProtocol):
 
 
 async def handle(websocket: WebSocketServerProtocol):
-    print("HANDLE")
     if websocket.path == "/flash":
         data = await websocket.recv()
         load_script(data)
@@ -71,6 +72,7 @@ async def handle(websocket: WebSocketServerProtocol):
 
     elif websocket.path == "/forward":
         while True:
+            print("Starting terminal")
             await forward(websocket)
 
     else:

@@ -20,7 +20,7 @@ async def main():
     build_dir.mkdir(exist_ok=True)
     print(build_dir)
     project_dir = Path(__file__).parents[1] / "tracking-box" / "sd-test"
-    await build_and_flash(build_dir, project_dir)
+    await build_and_flash(build_dir, project_dir, build_type="Debug")
 
     await connect_over_ws(reader, writer)
 
