@@ -3,9 +3,9 @@
 #include <stdio.h>
 
 #undef SYS_CLK_KHZ
-#define SYS_CLK_KHZ 125000
+#define SYS_CLK_KHZ 133000
 #undef SYS_CLK_MHZ
-#define SYS_CLK_MHZ 125
+#define SYS_CLK_MHZ 133
 
 #ifndef NDEBUG
 #define INFO(...)                                     \
@@ -26,7 +26,7 @@
         printf(__VA_ARGS__);                             \
     }
 #else
-#define WARNING(...) ;
+#define WARNING(...) blink();
 #endif
 
 #ifndef NDEBUG
@@ -40,7 +40,7 @@
         }                                               \
     }
 #else
-#define ERROR(...) ;
+#define ERROR(...) blink();
 #endif
 
 #ifndef NDEBUG

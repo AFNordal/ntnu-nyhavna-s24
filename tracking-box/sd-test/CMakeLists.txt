@@ -40,7 +40,7 @@ target_link_libraries(${PROJECT_NAME}
     hardware_dma
 )
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
 
 # Enable usb output, disable uart output
 pico_enable_stdio_usb(${PROJECT_NAME} 1)

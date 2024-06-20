@@ -8,7 +8,7 @@
 
 #define F9P_PULSE_LENGTH_MS 1
 #define F9P_BAUDRATE 912600
-#define F9P_BUF_SIZE 1024
+#define F9P_BUF_SIZE 4096
 
 void f9p_init(const uint8_t rx0_pin, const uint8_t rx1_pin, const uint8_t int_pin, alarm_pool_t *_timer_pool);
 void f9p_read_all(uint8_t *buf0, uint8_t *buf1, uint16_t *bw0, uint16_t *bw1);

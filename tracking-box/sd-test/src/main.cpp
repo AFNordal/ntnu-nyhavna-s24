@@ -9,7 +9,7 @@
 #include "battery.h"
 #include "f9p.h"
 
-#define IMU_BUF_SIZE 1024
+#define IMU_BUF_SIZE 2048
 // #define F9P_BUF_SIZE 1024
 #define F9P_INTERRUPT_INTERVAL 2 // seconds
 #define F9P_INTERRUPT_PIN 22
@@ -76,7 +76,6 @@ int main()
             // No data ready
             continue;
         IMU_drdy = false;
-        // int16_t ax, ay, az, gx, gy, gz;
         bmi_data_t IMUdata;
         if (bmi_read_sensors(&IMUdata) == 1)
             // False drdy; This happens some times
@@ -139,11 +138,12 @@ void core1_entry(void)
     INFO("SD file system initialized\n");
 
     // Poll capacitor voltage every 5ms
-    alarm_pool_t *p = alarm_pool_create_with_unused_hardware_alarm(PICO_TIME_DEFAULT_ALARM_POOL_MAX_TIMERS);
-    battery_init(5, adc_handler, p);
-    INFO("Battery management initialized\n");
+    alarm_pool_t *core1_alarms = alarm_pool_create_with_unused_hardware_alarm(PICO_TIME_DEFAULT_ALARM_POOL_MAX_TIMERS);
+    battery_init(5, adc_handler, core1_alarms);
+    // INFO("Battery management initialized\n");
 
-    f9p_init(F9P_RX0_PIN, F9P_RX1_PIN, F9P_INTERRUPT_PIN, p);
+    alarm_pool_t *core0_alarms = alarm_pool_get_default();
+    f9p_init(F9P_RX0_PIN, F9P_RX1_PIN, F9P_INTERRUPT_PIN, core0_alarms);
     INFO("F9P's initialized\n");
 
     uint16_t write_count = 0;
@@ -175,31 +175,35 @@ void core1_entry(void)
         //     F9Pbuffer_counter1 = 0;
         // }
         uint8_t *buf;
-        // if (f9p_chan0_drdy(&buf))
-        // {
-        //     // INFO("Wrote 0\n");
-        //     uint32_t _s = save_and_disable_interrupts();
-        //     sd_write(&F9Pfile0, buf, F9P_BUF_SIZE);
-        //     restore_interrupts(_s);
-        //     // INFO("Wrote 0\n");
-        // }
-        // if (f9p_chan1_drdy(&buf))
-        // {
-        //     // INFO("Wrote 1\n");
-        //     uint32_t _s = save_and_disable_interrupts();
-        //     save_and_disable_interrupts();
-        //     restore_interrupts(_s);
-        //     sd_write(&F9Pfile1, buf, F9P_BUF_SIZE);
-        // }
+        if (f9p_chan0_drdy(&buf))
+        {
+            uint32_t t0 = time_us_32();
+            sd_write(&F9Pfile0, buf, F9P_BUF_SIZE);
+            uint32_t t1 = time_us_32();
+            // INFO("F0 %d\n", t1-t0);
+        }
+        if (f9p_chan1_drdy(&buf))
+        {
+            uint32_t t0 = time_us_32();
+            sd_write(&F9Pfile1, buf, F9P_BUF_SIZE);
+            uint32_t t1 = time_us_32();
+            // INFO("F1 %d\n", t1-t0);
+        }
 
         if (!queue_try_remove(&IMU_queue, IMUbuffer))
             continue;
         // INFO("Rec");
+        uint32_t t0 = time_us_32();
         sd_write(&IMUfile, IMUbuffer, sizeof(IMU_sample_t) * IMU_BUF_SIZE);
+        uint32_t t1 = time_us_32();
+        // INFO("I  %d\n", t1-t0);
         // Flush file periodically
         if ((++write_count) % 16 == 0)
         {
+            uint32_t t0 = time_us_32();
             sd_sync(&IMUfile);
+            uint32_t t1 = time_us_32();
+            // INFO("S  %d\n", t1-t0);
             // INFO("Flushed file\n");
         }
     }
