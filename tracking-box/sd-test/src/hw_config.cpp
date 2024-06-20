@@ -28,7 +28,10 @@ static spi_t spi = {
     .miso_gpio = 16,
     .mosi_gpio = 19,
     .sck_gpio = 18,    // GPIO number (not Pico pin number)
-    .baud_rate = 25 * 1000 * 1000   
+    .baud_rate = 25 * 1000 * 1000,
+    .DMA_IRQ_num = DMA_IRQ_0,
+    .use_exclusive_DMA_IRQ_handler = true,
+    .use_static_dma_channels = false
 };
 
 /* SPI Interface */

@@ -55,7 +55,6 @@ void bmi_init(void)
 
     // Enable gyro and acc
     bmi_write(BMI_PWR_CTRL_R, (0x01 << 1) | (0x01 << 2));
-    // bmi_flush_FIFO();
 }
 
 void bmi_print_status(void)
@@ -182,4 +181,9 @@ void print_bmi_data(bmi_data_t *data)
     printf("ax:%d,", data->ax);
     printf("ay:%d,", data->ay);
     printf("az:%d\n", data->az);
+}
+
+void bmi_set_drdy_pin(const uint8_t pin, void (*callback)(uint gpio, uint32_t event_mask))
+{
+    gpio_set_irq_enabled_with_callback(pin, GPIO_IRQ_EDGE_RISE, true, callback);
 }

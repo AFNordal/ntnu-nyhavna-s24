@@ -3,9 +3,9 @@
 #include <stdio.h>
 
 #undef SYS_CLK_KHZ
-#define SYS_CLK_KHZ 133000
+#define SYS_CLK_KHZ 125000
 #undef SYS_CLK_MHZ
-#define SYS_CLK_MHZ 133
+#define SYS_CLK_MHZ 125
 
 #ifndef NDEBUG
 #define INFO(...)                                     \
