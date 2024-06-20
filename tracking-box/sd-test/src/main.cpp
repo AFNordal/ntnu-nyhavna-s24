@@ -1,3 +1,29 @@
+/*
+HVA GJENSTÅR?
+-------------
+Nå fungerer det kanskje. Bør testes over lang tid.
+
+Får av og til FR_DISK_ERR fra f_write, kun når man 
+skriver til IMU og DMA-ene til F9P-ene kjører.
+
+Det virker som at det er forskjell på Release og
+Debug.
+
+Lurer på om feilen har vært fordi dma-bufrene ikke
+var erklert volatile. Det er de fortsatt ikke (Fordi 
+sd_write ikke tar imot volatile void*), men har satt
+inn en __sync_synchronize før hver sd_write.
+
+Dersom feilene vedvarer, se etter nytt SD-lib
+
+Ellers er egentlig programmet ferdig.
+
+HUSK:
+ - FATAL() i sd_write, som halt-er også i Release-modus
+ - Står nå i Release-modus
+
+*/
+
 #include <stdio.h>
 
 #include "pico/stdlib.h"
@@ -9,8 +35,7 @@
 #include "battery.h"
 #include "f9p.h"
 
-#define IMU_BUF_SIZE 2048
-// #define F9P_BUF_SIZE 1024
+#define IMU_BUF_SIZE 512
 #define F9P_INTERRUPT_INTERVAL 2 // seconds
 #define F9P_INTERRUPT_PIN 22
 #define F9P_RX0_PIN 1
@@ -29,8 +54,9 @@ typedef struct
     bmi_data_t data;
     uint32_t sample_idx;
     uint8_t stamped;
+    uint32_t _dummy0[3]; // To make the struct 32 bytes long
 } IMU_sample_t;
-
+int a = sizeof(bmi_data_t);
 void core1_entry(void);
 
 void __time_critical_func(IMU_drdy_handler)(uint gpio, uint32_t event_mask)
@@ -45,65 +71,22 @@ void __time_critical_func(IMU_drdy_handler)(uint gpio, uint32_t event_mask)
     IMU_drdy = true;
 }
 
-int main()
-{
-    stdio_init_all();
-    set_sys_clock_133mhz();
-    busy_wait_cycles_ms(500);
-
-    bmi_init();
-    bmi_set_drdy_pin(BMI_DRDY_PIN, IMU_drdy_handler);
-    // INFO("BMI270 initialized\n");
-
-    queue_init(&IMU_queue, sizeof(IMU_sample_t) * IMU_BUF_SIZE, 1);
-    multicore_launch_core1(core1_entry);
-    // INFO("Launched core 1\n");
-
-    uint32_t IMU_sample_idx = 0;
-    IMU_sample_t *IMUbuffer = new IMU_sample_t[IMU_BUF_SIZE];
-
-    // Flush first readings
-    for (uint16_t i = 0; i < 128; i++)
-    {
-        while (!IMU_drdy)
-            ;
-        IMU_drdy = false;
-        bmi_read_FIFO(nullptr, bmi_get_FIFO_length());
-    }
-    while (true)
-    {
-        if (!IMU_drdy)
-            // No data ready
-            continue;
-        IMU_drdy = false;
-        bmi_data_t IMUdata;
-        if (bmi_read_sensors(&IMUdata) == 1)
-            // False drdy; This happens some times
-            continue;
-        bool stamped = (IMU_ticker == 0);
-        IMUbuffer[IMU_sample_idx % IMU_BUF_SIZE] = (IMU_sample_t){IMUdata,
-                                                                  IMU_sample_idx++,
-                                                                  stamped};
-        // if (stamped)
-        // {
-        //     // INFO("Stamped IMU sample\n");
-        // }
-        if (IMU_sample_idx % IMU_BUF_SIZE == 0)
-        {
-            if (!queue_try_add(&IMU_queue, IMUbuffer))
-                ERROR("Queue full\n");
-        }
-    }
-}
-
 void __time_critical_func(adc_handler)(uint16_t level)
 {
     if (level < 1600)
         disconnected = true;
 }
 
-void core1_entry(void)
+int main()
 {
+    stdio_init_all();
+    set_sys_clock_133mhz();
+    busy_wait_cycles_ms(1000);
+
+    queue_init(&IMU_queue, sizeof(IMU_sample_t) * IMU_BUF_SIZE, 1);
+    multicore_launch_core1(core1_entry);
+    // INFO("Launched core 1\n");
+
     FATFS fs;
     sd_mount(&fs);
 
@@ -137,73 +120,36 @@ void core1_entry(void)
 
     INFO("SD file system initialized\n");
 
-    // Poll capacitor voltage every 5ms
-    alarm_pool_t *core1_alarms = alarm_pool_create_with_unused_hardware_alarm(PICO_TIME_DEFAULT_ALARM_POOL_MAX_TIMERS);
-    battery_init(5, adc_handler, core1_alarms);
-    // INFO("Battery management initialized\n");
-
     alarm_pool_t *core0_alarms = alarm_pool_get_default();
+    // Poll capacitor voltage every 5ms
+    battery_init(5, adc_handler, core0_alarms);
+    INFO("Battery management initialized\n");
+
+    // Timer used to pulse interrupt pin
     f9p_init(F9P_RX0_PIN, F9P_RX1_PIN, F9P_INTERRUPT_PIN, core0_alarms);
     INFO("F9P's initialized\n");
 
     uint16_t write_count = 0;
     IMU_sample_t *IMUbuffer = new IMU_sample_t[IMU_BUF_SIZE];
-    // uint8_t *F9Pbuffer0 = new uint8_t[F9P_BUF_SIZE];
-    // uint8_t *F9Pbuffer1 = new uint8_t[F9P_BUF_SIZE];
-    uint16_t F9Pbuffer_counter0 = 0;
-    uint16_t F9Pbuffer_counter1 = 0;
     while (!disconnected)
     {
-        // uint16_t bw0 = 0;
-        // uint16_t bw1 = 0;
-        // // INFO("r\n");
-        // f9p_read_all(F9Pbuffer0 + F9Pbuffer_counter0, F9Pbuffer1 + F9Pbuffer_counter1, &bw0, &bw1);
-        // // INFO("rd");
-
-        // // if(bw1)
-        // //     printf("BING here %d\n", bw1);
-        // F9Pbuffer_counter0 += bw0;
-        // F9Pbuffer_counter1 += bw1;
-        // // if (bw1>0) INFO("%d\n", bw1);
-        // if (F9Pbuffer_counter0 >= F9P_BUF_SIZE - 128) {
-        //     sd_write(&F9Pfile0, F9Pbuffer0, F9Pbuffer_counter0);
-        //     F9Pbuffer_counter0 = 0;
-        // }
-        // if (F9Pbuffer_counter1 >= F9P_BUF_SIZE - 128) {
-        //     // INFO("Write");
-        //     sd_write(&F9Pfile1, F9Pbuffer1, F9Pbuffer_counter1);
-        //     F9Pbuffer_counter1 = 0;
-        // }
         uint8_t *buf;
         if (f9p_chan0_drdy(&buf))
         {
-            uint32_t t0 = time_us_32();
             sd_write(&F9Pfile0, buf, F9P_BUF_SIZE);
-            uint32_t t1 = time_us_32();
-            // INFO("F0 %d\n", t1-t0);
         }
         if (f9p_chan1_drdy(&buf))
         {
-            uint32_t t0 = time_us_32();
             sd_write(&F9Pfile1, buf, F9P_BUF_SIZE);
-            uint32_t t1 = time_us_32();
-            // INFO("F1 %d\n", t1-t0);
         }
 
         if (!queue_try_remove(&IMU_queue, IMUbuffer))
             continue;
-        // INFO("Rec");
-        uint32_t t0 = time_us_32();
         sd_write(&IMUfile, IMUbuffer, sizeof(IMU_sample_t) * IMU_BUF_SIZE);
-        uint32_t t1 = time_us_32();
-        // INFO("I  %d\n", t1-t0);
         // Flush file periodically
         if ((++write_count) % 16 == 0)
         {
-            uint32_t t0 = time_us_32();
             sd_sync(&IMUfile);
-            uint32_t t1 = time_us_32();
-            // INFO("S  %d\n", t1-t0);
             // INFO("Flushed file\n");
         }
     }
@@ -216,4 +162,45 @@ void core1_entry(void)
     blink();
     for (;;)
         ;
+    
+}
+
+void core1_entry(void)
+{
+
+    bmi_init();
+    bmi_set_drdy_pin(BMI_DRDY_PIN, IMU_drdy_handler);
+    // INFO("BMI270 initialized\n");
+
+    uint32_t IMU_sample_idx = 0;
+    IMU_sample_t *IMUbuffer = new IMU_sample_t[IMU_BUF_SIZE];
+
+    // Flush first readings
+    for (uint16_t i = 0; i < 128; i++)
+    {
+        while (!IMU_drdy)
+            ;
+        IMU_drdy = false;
+        bmi_read_FIFO(nullptr, bmi_get_FIFO_length());
+    }
+    while (true)
+    {
+        if (!IMU_drdy)
+            // No data ready
+            continue;
+        IMU_drdy = false;
+        bmi_data_t IMUdata;
+        if (bmi_read_sensors(&IMUdata) == 1)
+            // False drdy; This happens some times
+            continue;
+        bool stamped = (IMU_ticker == 0);
+        IMUbuffer[IMU_sample_idx % IMU_BUF_SIZE] = (IMU_sample_t){IMUdata,
+                                                                  IMU_sample_idx++,
+                                                                  stamped};
+        if (IMU_sample_idx % IMU_BUF_SIZE == 0)
+        {
+            if (!queue_try_add(&IMU_queue, IMUbuffer))
+                ERROR("Queue full\n");
+        }
+    }
 }

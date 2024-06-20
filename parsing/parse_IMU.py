@@ -14,11 +14,11 @@ def main():
     fname = get_fname()
     with open(fname, "rb") as file:
         contents = file.read()
-    data = np.array([i for i in tqdm(struct.iter_unpack("<"+"h"*6+"I"+"B"*4, contents))])
+    data = np.array([i for i in tqdm(struct.iter_unpack("<"+"h"*6+"I"+"B"*4+"I"*3, contents))])
     plt.plot(data[:, 6], data[:, 0])
     plt.show()
         # for sample in data:
-        #     ax, ay, az, gx, gy, gz, j, f, _, _, _ = sample
+        #     ax, ay, az, gx, gy, gz, j, f, _, _, _, _, _, _ = sample
 
 
 

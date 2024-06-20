@@ -38,7 +38,7 @@ size_t sd_write(FIL *file, const void *buffer, UINT len)
     UINT n;
     FRESULT fr = f_write(file, buffer, len, &n);
     if (FR_OK != fr)
-        WARNING("f_write error: %s (%d)\n", FRESULT_str(fr), fr);
+        FATAL("f_write error: %s (%d)\n", FRESULT_str(fr), fr);
     return n;
 }
 

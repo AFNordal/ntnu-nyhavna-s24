@@ -8,11 +8,11 @@
 #define SYS_CLK_MHZ 133
 
 #ifndef NDEBUG
-#define INFO(...)                                     \
-                                                      \
-    {                                                 \
-        printf("INFO: "); \
-        printf(__VA_ARGS__);                          \
+#define INFO(...)            \
+                             \
+    {                        \
+        printf("INFO: ");    \
+        printf(__VA_ARGS__); \
     }
 #else
 #define INFO(...) ;
@@ -26,7 +26,7 @@
         printf(__VA_ARGS__);                             \
     }
 #else
-#define WARNING(...) blink();
+#define WARNING(...) ;
 #endif
 
 #ifndef NDEBUG
@@ -40,8 +40,17 @@
         }                                               \
     }
 #else
-#define ERROR(...) blink();
+#define ERROR(...) ;
 #endif
+
+#define FATAL(...)                                      \
+    {                                                   \
+        printf("%s:%d: FATAL: \n", __FILE__, __LINE__); \
+        printf(__VA_ARGS__);                            \
+        while (1)                                       \
+        {                                               \
+        }                                               \
+    }
 
 #ifndef NDEBUG
 #define ASSERT(x)                                               \

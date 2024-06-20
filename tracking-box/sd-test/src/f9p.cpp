@@ -2,7 +2,7 @@
 static volatile uint8_t interrupt_pin;
 static volatile alarm_pool_t *timer_pool;
 
-static  uint8_t *dma_buffers[4];
+static uint8_t *dma_buffers[4];
 static volatile int dma_channels[4];
 
 static volatile bool buffer_newly_read[4];
@@ -33,41 +33,12 @@ static void dma_handler(void)
             drdy_flags[i] = true;
             dma_channel_acknowledge_irq1(dma_channels[i]);
         }
-        // else
-        //     drdy_flags[i] = false;
     }
-    // INFO("hello");
 
+    // Only one DMA should be active for each uart
     ASSERT(!(drdy_flags[0] && drdy_flags[1]));
     ASSERT(!(drdy_flags[2] && drdy_flags[3]));
-    // chan1_drdy = true;
-    // if (dma_channel_get_irq1_status(dma_channels[0])) {
-    //     chan0_drdy = true;
-    //     chan0_buf_to_read = 0;
-    //     dma_channel_acknowledge_irq1(dma_channels[0]);
-    //     ASSERT(!dma_channel_get_irq1_status(dma_channels[1]));
-    // } else if (dma_channel_get_irq1_status(dma_channels[1])) {
-    //     chan0_drdy = true;
-    //     chan0_buf_to_read = 0;
-    //     dma_channel_acknowledge_irq1(dma_channels[1]);
-    //     ASSERT(!dma_channel_get_irq1_status(dma_channels[0]));
-    // }
-    // if (dma_channel_get_irq1_status(dma_channels[2])) {
-    //     chan1_drdy = true;
-    //     chan1_buf_to_read = 2;
-    //     dma_channel_acknowledge_irq1(dma_channels[2]);
-    //     ASSERT(!dma_channel_get_irq1_status(dma_channels[3]));
-    // } else if (dma_channel_get_irq1_status(dma_channels[3])) {
-    //     chan1_drdy = true;
-    //     chan1_buf_to_read = 3;
-    //     dma_channel_acknowledge_irq1(dma_channels[3]);
-    //     ASSERT(!dma_channel_get_irq1_status(dma_channels[2]));
-    // }
 }
-static uint8_t *buf0;
-static uint8_t *buf1;
-static uint8_t *buf2;
-static uint8_t *buf3;
 
 static void f9p_dma_init(void)
 {
@@ -237,19 +208,21 @@ bool f9p_chan0_drdy(uint8_t **buf_to_read)
     if (drdy_flags[0])
     {
         drdy_flags[0] = false;
+        __sync_synchronize();
         *buf_to_read = dma_buffers[0];
         return true;
     }
     if (drdy_flags[1])
     {
         drdy_flags[1] = false;
+        __sync_synchronize();
         *buf_to_read = dma_buffers[1];
         return true;
     }
     return false;
 }
 
-bool f9p_chan1_drdy(uint8_t **buf_to_read)
+bool f9p_chan1_drdy( uint8_t **buf_to_read)
 {
     // if ((!buffer_newly_read[2]) && (!dma_channel_is_busy(dma_channels[2])))
     // {
@@ -275,12 +248,14 @@ bool f9p_chan1_drdy(uint8_t **buf_to_read)
     if (drdy_flags[2])
     {
         drdy_flags[2] = false;
+        __sync_synchronize();
         *buf_to_read = dma_buffers[2];
         return true;
     }
     if (drdy_flags[3])
     {
         drdy_flags[3] = false;
+        __sync_synchronize();
         *buf_to_read = dma_buffers[3];
         return true;
     }
