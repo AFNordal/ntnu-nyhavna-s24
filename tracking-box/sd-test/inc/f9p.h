@@ -10,7 +10,7 @@
 #define F9P_BAUDRATE 912600
 #define F9P_BUF_SIZE 4096*2
 
-void f9p_init(const uint8_t rx0_pin, const uint8_t rx1_pin, const uint8_t int_pin, alarm_pool_t *_timer_pool);
+void f9p_init(const uint8_t rx0_pin, const uint8_t rx1_pin, const uint8_t int_pin);//, alarm_pool_t *_timer_pool);
 void f9p_read_all(uint8_t *buf0, uint8_t *buf1, uint16_t *bw0, uint16_t *bw1);
 void __time_critical_func(f9p_send_interrupt)(void);
 static void f9p_dma_init(void);

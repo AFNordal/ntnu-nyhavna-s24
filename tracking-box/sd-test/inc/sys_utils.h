@@ -35,9 +35,7 @@
     {                                                   \
         printf("%s:%d: ERROR: \n", __FILE__, __LINE__); \
         printf(__VA_ARGS__);                            \
-        while (1)                                       \
-        {                                               \
-        }                                               \
+        err_blink();                                    \
     }
 #else
 #define ERROR(...) ;
@@ -47,9 +45,7 @@
     {                                                   \
         printf("%s:%d: FATAL: \n", __FILE__, __LINE__); \
         printf(__VA_ARGS__);                            \
-        while (1)                                       \
-        {                                               \
-        }                                               \
+        err_blink();                                    \
     }
 
 #ifndef NDEBUG
@@ -77,15 +73,31 @@ inline void busy_wait_cycles_ms(uint32_t ms)
     busy_wait_at_least_cycles(ms * SYS_CLK_KHZ);
 }
 
-inline void blink(void)
-{
+inline void blink_init(void) {
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+}
+
+inline void blink(void)
+{
+    blink_init();
     while (true)
     {
         gpio_put(PICO_DEFAULT_LED_PIN, 1);
         busy_wait_cycles_ms(10);
         gpio_put(PICO_DEFAULT_LED_PIN, 0);
         busy_wait_cycles_ms(50);
+    }
+}
+
+inline void err_blink(void)
+{
+    blink_init();
+    while (true)
+    {
+        gpio_put(PICO_DEFAULT_LED_PIN, 1);
+        busy_wait_cycles_ms(20);
+        gpio_put(PICO_DEFAULT_LED_PIN, 0);
+        busy_wait_cycles_ms(20);
     }
 }
