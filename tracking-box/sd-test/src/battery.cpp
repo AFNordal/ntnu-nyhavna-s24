@@ -3,6 +3,7 @@
 static repeating_timer_t adc_timer;
 static void (*adc_handler)(uint16_t);
 
+// A repeating timer starts the adc. When the measurement is done, the provided callback is called
 void battery_init(uint32_t sample_interval, void (*adc_callback)(uint16_t), alarm_pool_t *timer_pool)
 {
     adc_init();
@@ -18,13 +19,13 @@ void battery_init(uint32_t sample_interval, void (*adc_callback)(uint16_t), alar
     alarm_pool_add_repeating_timer_ms(timer_pool, sample_interval, adc_starter, NULL, &adc_timer);
 }
 
-static bool __time_critical_func(adc_starter)(repeating_timer_t *rt)
+static bool adc_starter(repeating_timer_t *rt)
 {
     adc_run(true);
     return true;
 }
 
-static void __time_critical_func(adc_irq)(void)
+static void adc_irq(void)
 {
     adc_run(false);
     uint16_t level = adc_fifo_get();

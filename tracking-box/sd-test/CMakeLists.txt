@@ -27,7 +27,10 @@ add_subdirectory(/include/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico/src build)
 
 pico_add_extra_outputs(${PROJECT_NAME})
     
-add_compile_definitions(PICO_STDIO_USB_RESET_MAGIC_BAUD_RATE=1200)
+add_compile_definitions(
+    PICO_STDIO_USB_RESET_MAGIC_BAUD_RATE=1200
+    PICO_USE_MALLOC_MUTEX=1
+)
 target_link_libraries(${PROJECT_NAME} 
     pico_stdlib
     pico_time

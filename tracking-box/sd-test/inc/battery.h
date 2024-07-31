@@ -9,5 +9,5 @@
 #define VBUS_ADC_INPUT 3
 
 void battery_init(uint32_t sample_interval, void (*adc_callback)(uint16_t), alarm_pool_t *timer_pool);
-static bool __time_critical_func(adc_starter)(repeating_timer_t *rt);
-static void __time_critical_func(adc_irq)(void);
+static bool adc_starter(repeating_timer_t *rt);
+static void adc_irq(void);

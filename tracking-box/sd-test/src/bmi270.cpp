@@ -23,9 +23,7 @@ void bmi_init(void)
 
     uint8_t init_status = bmi_read(BMI_INTERNAL_STATUS_R);
     if ((init_status & 0x0F) != 0x1)
-    {
         ERROR("BMI270 initialization failed with error code 0x%x\n", init_status);
-    }
     // Acc: 1.6KHz ODR, normal filtering
     bmi_write(BMI_ACC_CONF_R, (0x0c << 0) | (0x02 << 4) | (0x01 << 7));
     // Gyro: 1.6KHz ODR, normal filtering, low-noise
