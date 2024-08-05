@@ -30,7 +30,7 @@ void bmi_init(void)
     bmi_write(BMI_GYR_CONF_R, (0x0c << 0) | (0x02 << 4) | (0x01 << 6) | (0x01 << 7));
     // Acc: +/- 2g
     bmi_write(BMI_ACC_RANGE_R, 0x00);
-    // Gyro: +/-2000 dps, 131.2 LSB/dps
+    // Gyro: +/-250 dps, 131.2 LSB/dps
     bmi_write(BMI_GYR_RANGE_R, (0x03 << 0) | (0x01 << 3));
 
     // Gyro downsample by 4 to get 1.6KHz, unifltered data, no acc downsample

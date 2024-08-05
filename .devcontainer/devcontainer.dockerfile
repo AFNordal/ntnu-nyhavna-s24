@@ -16,16 +16,16 @@ RUN git clone https://github.com/carlk3/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico.git --r
 
 # python
 ARG python=python3.11
-RUN apt update && apt install -y ${python} python3-pip 
+RUN apt update && apt install -y ${python} python3-pip python3-tk
 # RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/${python} 1
 # RUN update-alternatives --config python3
 
-RUN printf "%s\n" "alias pip=pip3" "alias pip3='DISPLAY= pip3'" "alias python=python3" > ~/.bash_aliases
+RUN printf "%s\n" "alias pip=pip3\n" "alias python=python3" > ~/.bash_aliases
 
 RUN pip3 install --upgrade pip setuptools --break-system-packages
 RUN pip3 install black --break-system-packages
 RUN pip3 install websockets --break-system-packages
-RUN pip3 install numpy matplotlib tqdm --break-system-packages
+RUN pip3 install numpy matplotlib tqdm ahrs pyubx2 --break-system-packages
 # RUN pip install numpy scipy
 # RUN pip install plotly
 
