@@ -26,6 +26,8 @@ RUN pip3 install --upgrade pip setuptools --break-system-packages
 RUN pip3 install black --break-system-packages
 RUN pip3 install websockets --break-system-packages
 RUN pip3 install numpy matplotlib tqdm ahrs pyubx2 --break-system-packages
+
+ENV MPLBACKEND=TKAgg
 # RUN pip install numpy scipy
 # RUN pip install plotly
 

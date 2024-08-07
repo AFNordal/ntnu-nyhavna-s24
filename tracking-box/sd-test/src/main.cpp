@@ -17,7 +17,6 @@
 #define F9P_RX1_PIN 9
 #define BMI_DRDY_PIN 6
 
-
 // Used to communicate to core 0 that core 1 is alive
 queue_t heartbeat_queue;
 
@@ -44,15 +43,20 @@ void core1_entry(void);
 
 void IMU_drdy_handler(uint gpio, uint32_t event_mask)
 {
-    static uint8_t stamp_offset = 64;
-    if (IMU_armed && ((IMU_sample_idx % (stamp_offset + BMI_ODR_HZ * F9P_INTERRUPT_INTERVAL_S)) == 0))
+    static uint8_t stamp_offset = 32;
+    static uint32_t prev_stamped = 0;
+    if (IMU_armed && (IMU_sample_idx - prev_stamped == stamp_offset + BMI_ODR_HZ * F9P_INTERRUPT_INTERVAL_S))
     {
+        prev_stamped = IMU_sample_idx;
         IMU_sample_stamped = true;
         f9p_send_interrupt();
         if (--stamp_offset == 0)
             stamp_offset = 64;
     }
-    IMU_sample_stamped = false;
+    else
+    {
+        IMU_sample_stamped = false;
+    }
     IMU_drdy = true;
 }
 
@@ -63,7 +67,6 @@ void adc_handler(uint16_t level)
         pwr_disconnected = true;
 }
 
-
 int main()
 {
     stdio_init_all();
@@ -72,10 +75,6 @@ int main()
     busy_wait_cycles_ms(4000);
 
     queue_init(&heartbeat_queue, sizeof(uint8_t), 1);
-
-    queue_init(&IMU_queue, sizeof(IMU_sample_t) * IMU_BUF_SIZE, 1);
-    multicore_launch_core1(core1_entry);
-    INFO("Launched core 1\n");
 
     FATFS fs;
     sd_mount(&fs);
@@ -118,6 +117,10 @@ int main()
     // Timer used to pulse interrupt pin
     f9p_init(F9P_RX0_PIN, F9P_RX1_PIN, F9P_INTERRUPT_PIN, core0_alarms);
     INFO("F9P's initialized\n");
+
+    queue_init(&IMU_queue, sizeof(IMU_sample_t) * IMU_BUF_SIZE, 1);
+    multicore_launch_core1(core1_entry);
+    INFO("Launched core 1\n");
 
     uint16_t write_count = 0;
     IMU_sample_t *IMUbuffer = new IMU_sample_t[IMU_BUF_SIZE];

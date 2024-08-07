@@ -21,6 +21,7 @@ void bmi_init(void)
     bmi_write(BMI_INIT_CTRL_R, 0x01);
     busy_wait_cycles_ms(20);
 
+
     uint8_t init_status = bmi_read(BMI_INTERNAL_STATUS_R);
     if ((init_status & 0x0F) != 0x1)
         ERROR("BMI270 initialization failed with error code 0x%x\n", init_status);
@@ -53,6 +54,7 @@ void bmi_init(void)
 
     // Enable gyro and acc
     bmi_write(BMI_PWR_CTRL_R, (0x01 << 1) | (0x01 << 2));
+    // info_blink();
 }
 
 void bmi_print_status(void)

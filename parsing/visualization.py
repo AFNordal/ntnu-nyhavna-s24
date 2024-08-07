@@ -1,9 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
-import matplotlib
 import matplotlib.animation as animation
 
-matplotlib.use("tkagg")
 
 
 def plot_acc_gyr(idx, acc, gyr):
