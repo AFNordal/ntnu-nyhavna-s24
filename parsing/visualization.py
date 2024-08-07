@@ -61,7 +61,7 @@ def rotmat_from_euler(euler):
     return rot_z(euler[2]) @ rot_y(euler[1]) @ rot_x((euler[0]))
 
 
-def playback(ang):
+def playback(ang, fname=None):
     figure = plt.figure()
     ax = figure.add_subplot(projection="3d")
     colors = ["k", "r", "g", "b", "b", "b"]
@@ -112,11 +112,17 @@ def playback(ang):
             )
         return lines
 
+    print("Animating...", end="", flush=True)
     anim = animation.FuncAnimation(
         fig=figure,
         func=animate,
         frames=len(ang) // 100,
         interval=1000 // 16,
     )
-    plt.show()
-
+    print("Done")
+    if not fname:
+        plt.show()
+    else:
+        print("Saving video...", end="", flush=True)
+        anim.save(fname, writer=animation.FFMpegWriter(fps=16))
+        print("Done")

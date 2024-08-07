@@ -74,7 +74,7 @@ def main():
     IMUReader.save_parsed(IMU_parsed_fname, sample_times, acc, gyr)
     angles = IMUReader.estimate_euler(acc, gyr)
 
-    vis.playback(angles)
+    vis.playback(angles, fname="output.mp4")
     
     
     

@@ -16,7 +16,7 @@ RUN git clone https://github.com/carlk3/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico.git --r
 
 # python
 ARG python=python3.11
-RUN apt update && apt install -y ${python} python3-pip python3-tk
+RUN apt update && apt install -y ${python} python3-pip python3-tk ffmpeg
 # RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/${python} 1
 # RUN update-alternatives --config python3
 
