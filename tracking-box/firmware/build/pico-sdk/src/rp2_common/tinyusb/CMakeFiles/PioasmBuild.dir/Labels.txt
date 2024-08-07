@@ -1,0 +1,13 @@
+# Target labels
+ PioasmBuild
+# Source files and their labels
+/workspaces/ntnu-nyhavna-s24/tracking-box/sd-test/build/pico-sdk/src/rp2_common/tinyusb/CMakeFiles/PioasmBuild
+/workspaces/ntnu-nyhavna-s24/tracking-box/sd-test/build/pico-sdk/src/rp2_common/tinyusb/CMakeFiles/PioasmBuild.rule
+/workspaces/ntnu-nyhavna-s24/tracking-box/sd-test/build/pico-sdk/src/rp2_common/tinyusb/CMakeFiles/PioasmBuild-complete.rule
+/workspaces/ntnu-nyhavna-s24/tracking-box/sd-test/build/pico-sdk/src/rp2_common/tinyusb/pioasm/src/PioasmBuild-stamp/PioasmBuild-build.rule
+/workspaces/ntnu-nyhavna-s24/tracking-box/sd-test/build/pico-sdk/src/rp2_common/tinyusb/pioasm/src/PioasmBuild-stamp/PioasmBuild-configure.rule
+/workspaces/ntnu-nyhavna-s24/tracking-box/sd-test/build/pico-sdk/src/rp2_common/tinyusb/pioasm/src/PioasmBuild-stamp/PioasmBuild-download.rule
+/workspaces/ntnu-nyhavna-s24/tracking-box/sd-test/build/pico-sdk/src/rp2_common/tinyusb/pioasm/src/PioasmBuild-stamp/PioasmBuild-install.rule
+/workspaces/ntnu-nyhavna-s24/tracking-box/sd-test/build/pico-sdk/src/rp2_common/tinyusb/pioasm/src/PioasmBuild-stamp/PioasmBuild-mkdir.rule
+/workspaces/ntnu-nyhavna-s24/tracking-box/sd-test/build/pico-sdk/src/rp2_common/tinyusb/pioasm/src/PioasmBuild-stamp/PioasmBuild-patch.rule
+/workspaces/ntnu-nyhavna-s24/tracking-box/sd-test/build/pico-sdk/src/rp2_common/tinyusb/pioasm/src/PioasmBuild-stamp/PioasmBuild-update.rule

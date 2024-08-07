@@ -1,0 +1,3 @@
+/workspaces/ntnu-nyhavna-s24/tracking-box/sd-test/build/pioasm/CMakeFiles/pioasm.dir
+/workspaces/ntnu-nyhavna-s24/tracking-box/sd-test/build/pioasm/CMakeFiles/edit_cache.dir
+/workspaces/ntnu-nyhavna-s24/tracking-box/sd-test/build/pioasm/CMakeFiles/rebuild_cache.dir
