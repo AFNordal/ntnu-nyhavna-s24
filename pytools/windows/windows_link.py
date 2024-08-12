@@ -9,24 +9,34 @@ import win32api
 
 
 def load_script(script: bytes):
-    drive = Path("E:\\")
+    driveD = Path("D:\\")
+    driveE = Path("E:\\")
     for idx in range(20):
 
         print(f"Looking for pico dir {idx}")
 
-        if drive.exists():
-            info = win32api.GetVolumeInformation(str(drive))
+        if driveD.exists():
+            info = win32api.GetVolumeInformation(str(driveD))
             # print(info)
             assert info[0] == "RPI-RP2"
             print("Trying to flash")
-            with drive.joinpath("flash.uf2").open("wb") as f:
+            with driveD.joinpath("flash.uf2").open("wb") as f:
+                f.write(script)
+            print("Wrote script")
+            return
+        elif driveE.exists():
+            info = win32api.GetVolumeInformation(str(driveE))
+            # print(info)
+            assert info[0] == "RPI-RP2"
+            print("Trying to flash")
+            with driveE.joinpath("flash.uf2").open("wb") as f:
                 f.write(script)
             print("Wrote script")
             return
         try:
             serial.serial_for_url(url=get_url(), baudrate=1200, timeout=0.2)
         except Exception as e:
-            print("Failed to set magic baudrate")
+            print("Failed to set magic baudrate,", e)
             pass
         time.sleep(0.5)
 
@@ -66,6 +76,7 @@ async def forward(websocket: WebSocketServerProtocol):
 
 async def handle(websocket: WebSocketServerProtocol):
     if websocket.path == "/flash":
+        print("Received flash request")
         data = await websocket.recv()
         load_script(data)
         await websocket.send(b"OK")
@@ -80,7 +91,7 @@ async def handle(websocket: WebSocketServerProtocol):
 
 
 async def main():
-
+    print("Starting server")
     async with Serve(handle, "0.0.0.0", 8765, ping_timeout=None):
         await asyncio.Future()
 
