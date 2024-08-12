@@ -16,10 +16,10 @@ async def writer(sock: WebSocketClientProtocol):
 
 
 async def main():
-    build_dir = Path(__file__).parents[1] / "tracking-box" / "sd-test" / "build"
+    build_dir = Path(__file__).parents[1] / "tracking-box" / "firmware" / "build"
     build_dir.mkdir(exist_ok=True)
     print(build_dir)
-    project_dir = Path(__file__).parents[1] / "tracking-box" / "sd-test"
+    project_dir = Path(__file__).parents[1] / "tracking-box" / "firmware"
     await build_and_flash(build_dir, project_dir, build_type="Release")
 
     await connect_over_ws(reader, writer)

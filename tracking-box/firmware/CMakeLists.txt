@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 
 include(/include/pico-sdk/external/pico_sdk_import.cmake)
-project(sd_test C CXX ASM)
+project(tracker-box-firmware C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
