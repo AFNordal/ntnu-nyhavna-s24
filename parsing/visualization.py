@@ -2,8 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.animation as animation
 
-
-
+# Simple plots of time series
 def plot_acc_gyr(idx, acc, gyr):
     fig, (a1, a2) = plt.subplots(2, 1, sharex=True)
     a1.plot(idx, acc[:, 0])
@@ -18,7 +17,7 @@ def plot_acc_gyr(idx, acc, gyr):
     a2.title.set_text("gyroscope data")
     plt.show()
 
-
+# Simple plots of time series
 def plot_ang(idx, ang):
     plt.plot(idx, ang[:, 0])
     plt.plot(idx, ang[:, 1])
@@ -26,7 +25,7 @@ def plot_ang(idx, ang):
     plt.title("estimated euler angles")
     plt.show()
 
-
+# Rotation matrix
 def rot_x(theta):
     return np.array(
         [
@@ -36,7 +35,7 @@ def rot_x(theta):
         ]
     )
 
-
+# Rotation matrix
 def rot_y(theta):
     return np.array(
         [
@@ -46,7 +45,7 @@ def rot_y(theta):
         ]
     )
 
-
+# Rotation matrix
 def rot_z(theta):
     return np.array(
         [
@@ -61,7 +60,8 @@ def rotmat_from_euler(euler):
     return rot_z(euler[2]) @ rot_y(euler[1]) @ rot_x((euler[0]))
 
 
-def playback(ang, fname=None):
+# Spaghetti for animating euler angles
+def playback(ang, Fs, fps=15, fname=None):
     figure = plt.figure()
     ax = figure.add_subplot(projection="3d")
     colors = ["k", "r", "g", "b", "b", "b"]
@@ -101,7 +101,7 @@ def playback(ang, fname=None):
     ax.set_aspect("equal")
 
     def animate(i):
-        rotmat = rotmat_from_euler(ang[i * 100])
+        rotmat = rotmat_from_euler(ang[i * Fs // fps])
         rotvecs0 = rotmat @ vecs0.T
         rotvecs1 = rotmat @ vecs1.T
         for j in range(len(vecs0)):
@@ -116,8 +116,8 @@ def playback(ang, fname=None):
     anim = animation.FuncAnimation(
         fig=figure,
         func=animate,
-        frames=len(ang) // 100,
-        interval=1000 // 16,
+        frames=len(ang) * fps // Fs,
+        interval=1000 // fps,
     )
     print("Done")
     if not fname:

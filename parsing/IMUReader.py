@@ -14,8 +14,8 @@ IMU_sample_type = np.dtype(
 )
 
 
-def estimate_euler(acc, gyr):
-    IMUfilter = Madgwick(gyr, acc, frequency=1600, var_acc=0.001, var_gyr=4e-06)
+def estimate_euler(acc, gyr, Fs):
+    IMUfilter = Madgwick(gyr, acc, frequency=Fs, var_acc=0.001, var_gyr=4e-06)
     ang = np.array([Quaternion(q).to_angles() for q in IMUfilter.Q])
     return ang
 
@@ -45,7 +45,7 @@ def load_IMU_data(fname):
             )
         ]
     )
-    idx = raw_data[:, 6]
+    sample_nr = raw_data[:, 6]
     stamped = np.bool(raw_data[:, 7])
     acc = raw_data[:, 0:3] * 4 / (2**16) * 9.80665
     gyr = raw_data[:, 3:6] * 4000 / (2**16) * np.pi / 180
