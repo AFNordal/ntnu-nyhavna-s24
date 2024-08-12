@@ -50,7 +50,7 @@ void IMU_drdy_handler(uint gpio, uint32_t event_mask)
         prev_stamped = IMU_sample_idx;
         IMU_sample_stamped = true;
         f9p_send_interrupt();
-        if (--stamp_offset == 0)
+        if (stamp_offset-- == 0)
             stamp_offset = 64;
     }
     else
