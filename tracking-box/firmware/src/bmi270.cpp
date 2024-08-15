@@ -1,12 +1,12 @@
 #include "bmi270.h"
 
-void bmi_init(void)
+void bmi_init(const uint8_t sda_pin, const uint8_t scl_pin)
 {
     i2c_init(BMI_I2C, 1000 * 1000);
-    gpio_set_function(BMI_SDA_PIN, GPIO_FUNC_I2C);
-    gpio_set_function(BMI_SCL_PIN, GPIO_FUNC_I2C);
-    gpio_pull_up(BMI_SDA_PIN);
-    gpio_pull_up(BMI_SCL_PIN);
+    gpio_set_function(sda_pin, GPIO_FUNC_I2C);
+    gpio_set_function(scl_pin, GPIO_FUNC_I2C);
+    gpio_pull_up(sda_pin);
+    gpio_pull_up(scl_pin);
 
     // Reset all registers
     busy_wait_cycles_ms(10);
@@ -24,7 +24,7 @@ void bmi_init(void)
 
     uint8_t init_status = bmi_read(BMI_INTERNAL_STATUS_R);
     if ((init_status & 0x0F) != 0x1)
-        ERROR("BMI270 initialization failed with error code 0x%x\n", init_status);
+        FATAL("BMI270 initialization failed with error code 0x%x\n", init_status);
     // Acc: 1.6KHz ODR, normal filtering
     bmi_write(BMI_ACC_CONF_R, (0x0c << 0) | (0x02 << 4) | (0x01 << 7));
     // Gyro: 1.6KHz ODR, normal filtering, low-noise
@@ -117,11 +117,11 @@ void bmi_check_error(void)
     uint8_t errordata = bmi_read(BMI_INTERNAL_ERROR_R);
     if ((errordata & (1 << 2)) != 0)
     {
-        ERROR("Internal bmi error: Fatal\n");
+        FATAL("Internal bmi error: Fatal\n");
     }
     else if ((errordata & (1 << 1)) != 0)
     {
-        WARNING("Internal bmi error: Long processing time\n");
+        ERROR("Internal bmi error: Long processing time\n");
     }
 }
 

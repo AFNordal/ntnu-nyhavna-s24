@@ -16,6 +16,8 @@
 #define F9P_RX0_PIN 1
 #define F9P_RX1_PIN 9
 #define BMI_DRDY_PIN 6
+#define BMI_SDA_PIN 4
+#define BMI_SCL_PIN 5
 
 // Used to communicate to core 0 that core 1 is alive
 queue_t heartbeat_queue;
@@ -41,6 +43,7 @@ typedef struct
 
 void core1_entry(void);
 
+// callback for when IMU has new data ready
 void IMU_drdy_handler(uint gpio, uint32_t event_mask)
 {
     static uint8_t stamp_offset = 32;
@@ -169,7 +172,7 @@ void core1_entry(void)
     // Dummy variable
     uint8_t heartbeat_const = 1;
 
-    bmi_init();
+    bmi_init(BMI_SDA_PIN, BMI_SCL_PIN);
     bmi_set_drdy_pin(BMI_DRDY_PIN, IMU_drdy_handler);
     INFO("BMI270 initialized\n");
 

@@ -11,9 +11,6 @@
 #define BMI_FIFO_CAP 2048
 #define BMI_ODR_HZ 1600
 
-#define BMI_SDA_PIN 4
-#define BMI_SCL_PIN 5
-
 #define BMI_I2C i2c0
 #define BMI_I2C_ADDR 0x68
 
@@ -75,7 +72,7 @@ typedef struct
 
 uint16_t bmi_get_FIFO_length(void);
 void bmi_print_status(void);
-void bmi_init(void);
+void bmi_init(const uint8_t sda_pin, const uint8_t scl_pin);
 uint8_t bmi_read(uint8_t addr);
 void bmi_write(uint8_t addr, uint8_t txdata);
 void bmi_read_arr(uint8_t addr, size_t len, uint8_t *rxdata);

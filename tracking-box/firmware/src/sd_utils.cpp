@@ -4,7 +4,7 @@ void sd_mount(FATFS *fs)
 {
     FRESULT fr = f_mount(fs, "", 1);
     if (FR_OK != fr)
-        ERROR("f_mount error: %s (%d)\n", FRESULT_str(fr), fr);
+        FATAL("f_mount error: %s (%d)\n", FRESULT_str(fr), fr);
 }
 
 bool sd_open(FIL *file, const char *const filename, BYTE mode)
@@ -12,7 +12,7 @@ bool sd_open(FIL *file, const char *const filename, BYTE mode)
     FRESULT fr = f_open(file, filename, mode);
     if (FR_OK != fr && FR_EXIST != fr)
     {
-        ERROR("f_open error: %s (%d)\n", filename, FRESULT_str(fr), fr);
+        FATAL("f_open error: %s (%d)\n", filename, FRESULT_str(fr), fr);
         return 1;
     }
     else
@@ -23,14 +23,14 @@ void sd_rm(const char *const filename)
 {
     FRESULT fr = f_unlink(filename);
     if (FR_OK != fr && FR_EXIST != fr)
-        WARNING("f_unlink error: %s (%d)\n", filename, FRESULT_str(fr), fr);
+        ERROR("f_unlink error: %s (%d)\n", filename, FRESULT_str(fr), fr);
 }
 
 void sd_sync(FIL *file)
 {
     FRESULT fr = f_sync(file);
     if (FR_OK != fr)
-        WARNING("f_sync error: %s (%d)\n", FRESULT_str(fr), fr);
+        ERROR("f_sync error: %s (%d)\n", FRESULT_str(fr), fr);
 }
 
 size_t sd_write(FIL *file, const void *buffer, UINT len)
@@ -46,7 +46,7 @@ void sd_close(FIL *file)
 {
     FRESULT fr = f_close(file);
     if (FR_OK != fr)
-        printf("f_close error: %s (%d)\n", FRESULT_str(fr), fr);
+        ERROR("f_close error: %s (%d)\n", FRESULT_str(fr), fr);
 }
 
 void sd_unmount(void)
