@@ -39,11 +39,58 @@ Make sure that the SD card is properly inserted and that the I2C bus of the IMU 
 If the LED blinks quickly with ~16% duty cycle, the Pico has detected a brown-out and has flushed and closed all SD card writers to avoid corrupting the file system. A false detection has not yet occured. Resetting the Pico should restart the logging.
 
  ### Parsing
+
+ #### Data format
+The F9P data streams are copied directly to the data files.
+
+The IMU data is stored as a stream of raw, little-endian structs. The struct is defined as
+```
+typedef struct
+{
+    bmi_data_t data;
+    uint32_t sample_idx;
+    uint8_t stamped;
+    uint32_t _dummy0[3]; // To make the struct 32 bytes long
+} IMU_sample_t;
+```
+where `bmi_data_t` is defined as
+```
+typedef struct
+{
+    int16_t ax;
+    int16_t ay;
+    int16_t az;
+    int16_t gx;
+    int16_t gy;
+    int16_t gz;
+} bmi_data_t;
+```
+This means that the data is structured as follows:
+
+| byte # | field | type |
+| ----- | ------ | ---- |
+| 0-1 | acc_x | int16 |
+| 2-3 | acc_y | int16 |
+| 4-5 | acc_z | int16 |
+| 6-7 | acc_x | int16 |
+| 8-9 | acc_y | int16 |
+| 10-11 | acc_z | int16 |
+| 12-15 | sample index | uint32 |
+| 16 | acc_z | bool (uint8) |
+| 17-31 | dummy | n.a. |
+
+In python, this can be decoded with
+```
+struct.unpack("<" + "h"*6 + "I" + "B"*4 + "I"*3, raw_bytes)
+```
+which is applied in the next subsection.
+
+ #### Parsing framework
 The `parsing` directory contains a framework for parsing raw tracking data, synchronizing IMU data and F9P timestamps, plus some simple visualization tools. You can for instance replay the IMU data like seen below.
+
 ![Animation of replayed IMU orientation](readme-media/replay.gif)
 
  ### Schematic
-Please enjoy my hand drawn masterpiece:
 ![Schematic of Pico, F9Ps and IMU](readme-media/schematic.jpg)
 
  ### Firmware
@@ -54,6 +101,8 @@ Core 0 handles initialization of the F9P interface, SD file system, and voltage 
 Core 1 handles initialization of the IMU and IMU interface, and is responsible for reading IMU data.
 
 For accurate timestamping, the IMU data ready (DRDY) pulse is periodically forwarded to the F9Ps' EXTINT. This should happen around once every 2s. To be able to align IMU data and F9P timestamps that are offset by more than 2s, the interval between each pulse-forward is decreased by one IMU DRDY pulse for each pulse-forward. Every 64 pulse-forwards the interval is reset.
+
+When a pulse is forwarded, the corresponding IMU sample's `stamped` field is set to 1. For all other samples it is set to 0.
 
 The following two diagrams provide an overview of interactions with the IMU and F9Ps, respectively.
 
